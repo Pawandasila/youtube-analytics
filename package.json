@@ -24,6 +24,7 @@
     "drizzle-orm": "^0.39.1",
     "framer-motion": "^12.23.3",
     "gsap": "^3.13.0",
+    "imagekit": "^6.0.0",
     "inngest": "^3.40.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.474.0",
