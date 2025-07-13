@@ -1,36 +1,84 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ImageIcon, Palette, Download, Sparkles, Upload, Settings, Zap, CheckCircle } from 'lucide-react';
-import ThumbnailGeneratorModal from './_components/ThumbnailGeneratorModal';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ImageIcon,
+  Palette,
+  Download,
+  Sparkles,
+  Upload,
+  Settings,
+  Zap,
+  CheckCircle,
+  Loader2Icon,
+} from "lucide-react";
+import ThumbnailGeneratorModal from "./_components/ThumbnailGeneratorModal";
+import axios from "axios";
+import { RunStatus } from "@/services/GlobalApi";
 
 export default function ThumbnailGeneratorPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleThumbnailGeneration = async (formData: FormData) => {
     try {
-      console.log("🚀 Generating thumbnail...");
-      
-      const result = await fetch('/api/generate-thumbnail', {
-        method: 'POST',
-        body: formData,
+      setLoading(true);
+
+      console.log("🚀 Starting thumbnail generation...");
+
+      const result = await axios.post("/api/generate-thumbnail", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        validateStatus: function (status) {
+          return status < 500; // Resolve only if status is less than 500
+        }
       });
 
-      if (!result.ok) {
-        throw new Error('Failed to generate thumbnail');
+      // Check if the response is an error
+      if (result.status >= 400) {
+        throw new Error(`API Error: ${result.data.error || result.data.details || 'Unknown error'}`);
       }
 
-      const data = await result.json();
-      console.log("✅ Thumbnail generated successfully:", data);
-      
-      // Close modal after successful generation
+      console.log("✅ Thumbnail generation started:", result.data);
+
+      if (!result.data.data?.runId) {
+        throw new Error("No run ID received from server");
+      }
+
+      // inngest function running
+      while (true) {
+        const runStatus = await RunStatus(result.data.data.runId);
+        console.log("Run Status:", runStatus?.data[0]?.status);
+        if (runStatus?.data[0]?.status === "Completed") {
+          setLoading(false);
+          console.log("✅ Thumbnail generation completed!");
+          break;
+        } else if (
+          runStatus?.data[0]?.status === "Failed" ||
+          runStatus?.data[0]?.status === "Cancelled"
+        ) {
+          setLoading(false);
+          console.error("❌ Thumbnail generation failed or cancelled");
+          throw new Error("Thumbnail generation failed");
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
       setIsModalOpen(false);
-      
-      // You can add success notification here
-      return { success: true, data };
+
+      return { success: true, data: result.data };
     } catch (error) {
       console.error("❌ Error generating thumbnail:", error);
+      setLoading(false);
+      setIsModalOpen(false);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      alert(`Failed to generate thumbnail: ${errorMessage}`);
+      
       throw error;
     }
   };
@@ -38,27 +86,31 @@ export default function ThumbnailGeneratorPage() {
     {
       icon: Sparkles,
       title: "AI-Powered Design",
-      description: "Generate eye-catching thumbnails with advanced AI algorithms tailored for maximum engagement.",
-      color: "from-blue-500 to-blue-600"
+      description:
+        "Generate eye-catching thumbnails with advanced AI algorithms tailored for maximum engagement.",
+      color: "from-blue-500 to-blue-600",
     },
     {
       icon: Palette,
       title: "Custom Templates",
-      description: "Choose from hundreds of professionally designed templates optimized for different content types.",
-      color: "from-purple-500 to-purple-600"
+      description:
+        "Choose from hundreds of professionally designed templates optimized for different content types.",
+      color: "from-purple-500 to-purple-600",
     },
     {
       icon: Settings,
       title: "Brand Consistency",
-      description: "Maintain your brand identity with customizable color schemes, fonts, and logo placement.",
-      color: "from-green-500 to-green-600"
+      description:
+        "Maintain your brand identity with customizable color schemes, fonts, and logo placement.",
+      color: "from-green-500 to-green-600",
     },
     {
       icon: Download,
       title: "Instant Export",
-      description: "Download your thumbnails in multiple formats and resolutions for various platforms.",
-      color: "from-orange-500 to-orange-600"
-    }
+      description:
+        "Download your thumbnails in multiple formats and resolutions for various platforms.",
+      color: "from-orange-500 to-orange-600",
+    },
   ];
 
   const steps = [
@@ -66,26 +118,26 @@ export default function ThumbnailGeneratorPage() {
       number: 1,
       title: "Upload Content",
       description: "Upload your content or describe your video",
-      icon: Upload
+      icon: Upload,
     },
     {
       number: 2,
       title: "Choose Template",
       description: "Choose a template or let AI create one for you",
-      icon: ImageIcon
+      icon: ImageIcon,
     },
     {
       number: 3,
       title: "Customize Design",
       description: "Customize colors, text, and elements",
-      icon: Palette
+      icon: Palette,
     },
     {
       number: 4,
       title: "Download Thumbnail",
       description: "Download your professional thumbnail",
-      icon: CheckCircle
-    }
+      icon: CheckCircle,
+    },
   ];
 
   const containerVariants = {
@@ -93,9 +145,9 @@ export default function ThumbnailGeneratorPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -103,8 +155,8 @@ export default function ThumbnailGeneratorPage() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
-    }
+      transition: { duration: 0.5 },
+    },
   };
 
   return (
@@ -120,10 +172,10 @@ export default function ThumbnailGeneratorPage() {
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1 space-y-8 p-8 pt-6">
         {/* Hero Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -133,9 +185,10 @@ export default function ThumbnailGeneratorPage() {
             Create Stunning Thumbnails
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Transform your YouTube content with AI-powered thumbnail generation that boosts click-through rates and engagement
+            Transform your YouTube content with AI-powered thumbnail generation
+            that boosts click-through rates and engagement
           </p>
-          
+
           {/* CTA Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -147,9 +200,20 @@ export default function ThumbnailGeneratorPage() {
             Start Creating Now
           </motion.button>
         </motion.div>
-        
+
+        <div>
+          {loading ? (
+            <div className="bg-secondary rounded-2xl h-[300px] w-full border border-gray-400 shadow-md flex items-center justify-center">
+              <Loader2Icon className="animate-spin w-5 h-5 " />{" "}
+              <h2>Please wait thumbnail is generating...</h2>
+            </div>
+          ) : (
+            <div>displayImage</div>
+          )}
+        </div>
+
         {/* Features Grid */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -166,13 +230,15 @@ export default function ThumbnailGeneratorPage() {
               >
                 <div className="relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300">
                   {/* Header with gradient */}
-                  <div className={`relative h-32 bg-gradient-to-br ${feature.color} p-4`}>
+                  <div
+                    className={`relative h-32 bg-gradient-to-br ${feature.color} p-4`}
+                  >
                     <div className="absolute top-4 left-4">
                       <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
                         <IconComponent className="w-6 h-6 text-white" />
                       </div>
                     </div>
-                    
+
                     {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
                     <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8" />
@@ -195,9 +261,9 @@ export default function ThumbnailGeneratorPage() {
             );
           })}
         </motion.div>
-        
+
         {/* Getting Started Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
@@ -210,10 +276,11 @@ export default function ThumbnailGeneratorPage() {
                 Getting Started
               </h3>
               <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Ready to create your first thumbnail? Follow these simple steps to get started with our AI-powered thumbnail generator.
+                Ready to create your first thumbnail? Follow these simple steps
+                to get started with our AI-powered thumbnail generator.
               </p>
             </div>
-            
+
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {steps.map((step, index) => {
                 const IconComponent = step.icon;
@@ -239,7 +306,7 @@ export default function ThumbnailGeneratorPage() {
                         {step.description}
                       </p>
                     </div>
-                    
+
                     {/* Connection line (except for last item) */}
                     {index < steps.length - 1 && (
                       <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-blue-300 to-purple-300 transform -translate-y-1/2" />
@@ -251,10 +318,10 @@ export default function ThumbnailGeneratorPage() {
           </div>
         </motion.div>
       </div>
-      
+
       {/* Thumbnail Generator Modal */}
-      <ThumbnailGeneratorModal 
-        open={isModalOpen} 
+      <ThumbnailGeneratorModal
+        open={isModalOpen}
         onOpenChange={setIsModalOpen}
         onSubmit={handleThumbnailGeneration}
       />
