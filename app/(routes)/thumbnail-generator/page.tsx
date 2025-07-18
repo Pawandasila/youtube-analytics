@@ -16,69 +16,121 @@ import {
 import ThumbnailGeneratorModal from "./_components/ThumbnailGeneratorModal";
 import axios from "axios";
 import { RunStatus } from "@/services/GlobalApi";
+import { containerVariants, itemVariants } from "./types";
+import { toast } from "sonner";
+import ThumbnailList from "./_components/ThumbnailList";
 
 export default function ThumbnailGeneratorPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+
+
+  const downloadThumbnail = async (imageUrl: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      const now = new Date();
+      const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+      const filename = `ai-thumbnail-${timestamp}.jpg`;
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      alert('Failed to download image. Please try again.');
+    }
+  };
 
   const handleThumbnailGeneration = async (formData: FormData) => {
     try {
+      return await generateThumbnail(formData);
+    } catch (error) {
+      console.error("Error in handleThumbnailGeneration:", error);
+      setLoading(false);
+      return { success: false, data: null };
+    }
+  };
+
+  const generateThumbnail = async (formData: FormData) => {
+    try {
       setLoading(true);
 
-      console.log("🚀 Starting thumbnail generation...");
+      const result = await axios.post("/api/generate-thumbnail", formData);
+      const eventId = result.data.data.runId;
 
-      const result = await axios.post("/api/generate-thumbnail", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        validateStatus: function (status) {
-          return status < 500; // Resolve only if status is less than 500
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      let attempts = 0;
+      const maxAttempts = 30;
+      let isCompleted = false;
+
+      while (!isCompleted && attempts < maxAttempts) {
+        try {
+
+          const runStatus = await RunStatus(eventId);
+
+          if (runStatus) {
+
+            if (runStatus.status === 'Completed') {
+
+              const thumbnailUrl = runStatus.output?.data?.result?.[0]?.thumbnailUrl;
+
+              if (thumbnailUrl) {
+                setGeneratedThumbnail(thumbnailUrl);
+              }
+
+              isCompleted = true;
+              toast.success("Thumbnail generated successfully!");
+
+              break;
+            } else if (runStatus.status === 'Failed') {
+              throw new Error("Thumbnail generation failed");
+            } else {
+              console.log("⏳ Still processing...");
+            }
+          } else {
+            console.log("⏳ Run not found yet, waiting...");
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          attempts++;
+
+        } catch (statusError) {
+          console.error("❌ Error checking status:", statusError);
+          attempts++;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
         }
-      });
-
-      // Check if the response is an error
-      if (result.status >= 400) {
-        throw new Error(`API Error: ${result.data.error || result.data.details || 'Unknown error'}`);
       }
 
-      console.log("✅ Thumbnail generation started:", result.data);
+      if (!isCompleted) {
 
-      if (!result.data.data?.runId) {
-        throw new Error("No run ID received from server");
+        alert("⏰ Generation is taking longer than expected, but it's still processing in the background! Check back in a few minutes.");
       }
 
-      // inngest function running
-      while (true) {
-        const runStatus = await RunStatus(result.data.data.runId);
-        console.log("Run Status:", runStatus?.data[0]?.status);
-        if (runStatus?.data[0]?.status === "Completed") {
-          setLoading(false);
-          console.log("✅ Thumbnail generation completed!");
-          break;
-        } else if (
-          runStatus?.data[0]?.status === "Failed" ||
-          runStatus?.data[0]?.status === "Cancelled"
-        ) {
-          setLoading(false);
-          console.error("❌ Thumbnail generation failed or cancelled");
-          throw new Error("Thumbnail generation failed");
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-
+      setLoading(false);
       setIsModalOpen(false);
 
       return { success: true, data: result.data };
+
     } catch (error) {
       console.error("❌ Error generating thumbnail:", error);
       setLoading(false);
       setIsModalOpen(false);
-      
-      // Show user-friendly error message
+
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       alert(`Failed to generate thumbnail: ${errorMessage}`);
-      
+
       throw error;
     }
   };
@@ -140,28 +192,11 @@ export default function ThumbnailGeneratorPage() {
     },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
+
       <div className="border-b ">
         <div className="container flex h-14 max-w-screen-2xl items-center">
           <div className="flex items-center gap-3">
@@ -174,7 +209,6 @@ export default function ThumbnailGeneratorPage() {
       </div>
 
       <div className="flex-1 space-y-8 p-8 pt-6">
-        {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -189,7 +223,6 @@ export default function ThumbnailGeneratorPage() {
             that boosts click-through rates and engagement
           </p>
 
-          {/* CTA Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -204,15 +237,77 @@ export default function ThumbnailGeneratorPage() {
         <div>
           {loading ? (
             <div className="bg-secondary rounded-2xl h-[300px] w-full border border-gray-400 shadow-md flex items-center justify-center">
-              <Loader2Icon className="animate-spin w-5 h-5 " />{" "}
-              <h2>Please wait thumbnail is generating...</h2>
+              <div className="flex items-center gap-3">
+                <Loader2Icon className="animate-spin w-6 h-6" />
+                <h2 className="text-lg font-medium">Please wait, thumbnail is generating...</h2>
+              </div>
             </div>
-          ) : (
-            <div>displayImage</div>
-          )}
+          ) : generatedThumbnail ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="relative bg-secondary rounded-2xl overflow-hidden border border-gray-400 shadow-md"
+              style={{ aspectRatio: '16/9' }}
+            >
+              {isImageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <div className="w-full h-full relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent animate-[shimmer_2s_infinite]"
+                      style={{
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmer 2s infinite linear',
+                      }}
+                    />
+
+                    <div className="absolute inset-0 p-6 flex flex-col justify-between">
+                      <div className="space-y-4 w-2/3">
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse" />
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                        <div className="space-y-2">
+                          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                          <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3 bg-white/90 dark:bg-gray-800/90 p-4 rounded-xl shadow-lg">
+                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">Loading Preview...</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <img
+                src={generatedThumbnail}
+                alt="Generated thumbnail"
+                className={`w-full h-full object-cover transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                onLoadStart={() => setIsImageLoading(true)}
+                onLoad={() => setIsImageLoading(false)}
+              />
+              <div className="absolute bottom-4 right-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => downloadThumbnail(generatedThumbnail)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </motion.button>
+              </div>
+            </motion.div>
+          ) : null}
         </div>
 
-        {/* Features Grid */}
+        <ThumbnailList />
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -222,14 +317,20 @@ export default function ThumbnailGeneratorPage() {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
+
               <motion.div
                 key={index}
                 variants={itemVariants}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
                 className="group relative"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  opacity: 0,
+                  animationFillMode: 'forwards'
+                }}
               >
+
                 <div className="relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300">
-                  {/* Header with gradient */}
                   <div
                     className={`relative h-32 bg-gradient-to-br ${feature.color} p-4`}
                   >
@@ -239,12 +340,10 @@ export default function ThumbnailGeneratorPage() {
                       </div>
                     </div>
 
-                    {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10" />
                     <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8" />
                   </div>
 
-                  {/* Content */}
                   <div className="p-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {feature.title}
@@ -254,15 +353,16 @@ export default function ThumbnailGeneratorPage() {
                     </p>
                   </div>
 
-                  {/* Hover overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               </motion.div>
+
             );
           })}
         </motion.div>
 
-        {/* Getting Started Section */}
+
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -285,12 +385,18 @@ export default function ThumbnailGeneratorPage() {
               {steps.map((step, index) => {
                 const IconComponent = step.icon;
                 return (
+
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
                     className="relative group"
+                    style={{
+                      animationDelay: `${index * 0.1}s`,
+                      opacity: 0,
+                      animationFillMode: 'forwards'
+                    }}
                   >
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 group-hover:shadow-md transition-all duration-300">
                       <div className="flex items-center gap-4 mb-4">
@@ -307,7 +413,6 @@ export default function ThumbnailGeneratorPage() {
                       </p>
                     </div>
 
-                    {/* Connection line (except for last item) */}
                     {index < steps.length - 1 && (
                       <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-blue-300 to-purple-300 transform -translate-y-1/2" />
                     )}
@@ -317,9 +422,10 @@ export default function ThumbnailGeneratorPage() {
             </div>
           </div>
         </motion.div>
+
       </div>
 
-      {/* Thumbnail Generator Modal */}
+
       <ThumbnailGeneratorModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}

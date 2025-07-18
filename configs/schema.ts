@@ -8,11 +8,23 @@ export const usersTable = pgTable("users", {
 
 export const aiThumbnail = pgTable('thumbnails', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userInput: text().notNull(), // Changed to text for longer content
-    referenceImageUrl: text(), // Changed to text for longer URLs
-    faceImageUrl: text(), // Changed to text for longer URLs  
-    thumbnailUrl: text().notNull(), // Changed to text for longer URLs
+    userInput: text().notNull(), 
+    referenceImageUrl: text(), 
+    faceImageUrl: text(), 
+    thumbnailUrl: text().notNull(), 
     userEmail: varchar({ length: 255 }).notNull().references(() => usersTable.email),
     createdAt: integer().notNull(),
     updatedAt: integer().notNull(),
 })
+
+export const aiContent = pgTable('aiContent', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    userInput: text().notNull(),
+    title: text().notNull(),
+    description: text().notNull(),
+    tags: text().notNull(),
+    thumbnails: text().notNull(), // Store as JSON string array of thumbnail objects
+    userEmail: varchar({ length: 255 }).notNull().references(() => usersTable.email),
+    createdAt: integer().notNull(),
+    updatedAt: integer().notNull(),
+});

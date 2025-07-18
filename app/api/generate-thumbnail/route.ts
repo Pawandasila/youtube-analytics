@@ -1,22 +1,19 @@
+import { db } from "@/configs/db";
+import { aiThumbnail } from "@/configs/schema";
 import { inngest } from "@/inngest/client";
 import { currentUser } from "@clerk/nextjs/server";
-import { NextResponse , NextRequest } from "next/server";
+import { desc, eq } from "drizzle-orm";
+import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("🚀 Starting thumbnail generation API...");
-    
     const formData = await req.formData();
     const content = formData.get("content");
     const referenceImage = formData.get("referenceImage") as File | null;
     const faceImage = formData.get("faceImage") as File | null;
 
-    console.log("📝 Content:", content);
-    console.log("🖼️ Reference Image:", referenceImage?.name || "None");
-    console.log("👤 Face Image:", faceImage?.name || "None");
-
     const user = await currentUser();
-    
+
     if (!user?.primaryEmailAddress?.emailAddress) {
       return NextResponse.json(
         { error: "User authentication required" },
@@ -33,46 +30,38 @@ export async function POST(req: NextRequest) {
 
     const inputData = {
       content: content.toString(),
-      referenceImage: referenceImage ? await getFileBufferData(referenceImage) : null,
+      referenceImage: referenceImage
+        ? await getFileBufferData(referenceImage)
+        : null,
       faceImage: faceImage ? await getFileBufferData(faceImage) : null,
       userEmail: user.primaryEmailAddress.emailAddress,
     };
 
-    console.log("📤 Sending to Inngest...");
-    
     const result = await inngest.send({
       name: "ai/generate-thumbnail",
       data: inputData,
     });
 
-    console.log("✅ Inngest result:", result);
-
-    return NextResponse.json({ 
-      message: "Thumbnail generation started successfully", 
-      data: { 
+    return NextResponse.json({
+      message: "Thumbnail generation started successfully",
+      data: {
         runId: result?.ids?.[0] || result?.ids,
-        ids: result?.ids 
-      } 
+      },
     });
-    
   } catch (error) {
-    console.error("❌ API Error:", error);
-    
     return NextResponse.json(
-      { 
+      {
         error: "Failed to start thumbnail generation",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
   }
 }
 
-
 const getFileBufferData = async (file: File) => {
   try {
-    console.log(`📁 Processing file: ${file.name} (${file.size} bytes)`);
-    
+
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
 
@@ -80,7 +69,7 @@ const getFileBufferData = async (file: File) => {
       name: file.name,
       type: file.type,
       size: file.size,
-      lastModified: file.lastModified,    
+      lastModified: file.lastModified,
       buffer: fileBuffer.toString("base64"),
     };
   } catch (error) {
@@ -88,3 +77,22 @@ const getFileBufferData = async (file: File) => {
     throw new Error(`Failed to process file ${file.name}: ${error}`);
   }
 };
+
+export async function GET(req: NextRequest) {
+  try {
+    const user = await currentUser();
+    const result = await db
+      .select()
+      .from(aiThumbnail)
+      .where(
+        eq(aiThumbnail.userEmail, user?.primaryEmailAddress?.emailAddress || "")
+      ).orderBy(desc(aiThumbnail.createdAt));
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("❌ Error fetching thumbnails:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch thumbnails" },
+      { status: 500 }
+    );
+  }
+}

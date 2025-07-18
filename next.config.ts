@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Reduce development noise
+
   logging: {
     fetches: {
       fullUrl: false,
@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   },
   // Images configuration
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'image.pollinations.ai', 'ik.imagekit.io' , 'i.ytimg.com', 'yt3.googleusercontent.com', 'www.youtube.com'],
   },
 };
 

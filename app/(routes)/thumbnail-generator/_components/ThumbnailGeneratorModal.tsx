@@ -13,7 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Upload, ImageIcon, User, Loader2, Sparkles, X } from "lucide-react";
+import {
+  Upload,
+  ImageIcon,
+  User,
+  Loader2,
+  Sparkles,
+  X,
+  AlertCircle,
+} from "lucide-react";
 
 interface ThumbnailGeneratorModalProps {
   open: boolean;
@@ -62,7 +70,6 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
       return;
     }
 
-    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       setErrors((prev) => ({
         ...prev,
@@ -71,16 +78,13 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
       return;
     }
 
-    // Clear errors
     setErrors((prev) => ({ ...prev, [type]: "" }));
 
-    // Update form data
     setFormData((prev) => ({
       ...prev,
       [type === "reference" ? "referenceImage" : "faceImage"]: file,
     }));
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreviewImages((prev) => ({
@@ -132,7 +136,6 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
         face: null,
       });
       setErrors({});
-
     } catch (error) {
       console.error("Error generating thumbnail:", error);
       setErrors({ submit: "Failed to generate thumbnail. Please try again." });
@@ -143,7 +146,7 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto bg-white dark:bg-gray-900">
         <form onSubmit={handleSubmit} className="space-y-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl text-gray-900 dark:text-white">
@@ -153,12 +156,21 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
               AI Thumbnail Generator
             </DialogTitle>
             <DialogDescription className="text-gray-600 dark:text-gray-300">
-              Create stunning thumbnails for your YouTube videos using AI. Fill in
-              the details below to get started.
+              Create stunning thumbnails for your YouTube videos using AI. Fill
+              in the details below to get started.
             </DialogDescription>
           </DialogHeader>
 
-          {/* Content Input */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-l-4 border-blue-500 p-3 rounded-r-lg">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-blue-900 dark:text-blue-100 text-sm">
+                💡 <strong>Pro Tip:</strong> Add a reference image for better AI
+                results! Without it, you'll get a generic thumbnail.
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="content" className="flex items-center gap-2">
               <span className="text-red-500">*</span>
@@ -185,7 +197,6 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
             </p>
           </div>
 
-          {/* File Upload Section */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Reference Image Upload */}
             <div className="space-y-2">
@@ -249,7 +260,6 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
               </div>
             </div>
 
-            {/* Face Image Upload */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -310,8 +320,7 @@ const ThumbnailGeneratorModal: React.FC<ThumbnailGeneratorModalProps> = ({
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="space-y-3 pt-4">
+          <div className="space-y-3">
             {errors.submit && (
               <p className="text-sm text-red-500 text-center">
                 {errors.submit}

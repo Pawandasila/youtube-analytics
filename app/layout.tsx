@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Provider from "./provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair-display",
@@ -35,6 +36,7 @@ export default function RootLayout({
             storageKey="trendtide-theme"
           >
             <Provider>{children}</Provider>
+            <Toaster richColors />
           </ThemeProvider>
         </body>
       </html>
