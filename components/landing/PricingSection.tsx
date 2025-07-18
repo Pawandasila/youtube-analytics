@@ -25,13 +25,13 @@ export const PricingSection = () => {
         <ParallaxSection offset={50}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <PricingCard
-              name="Starter"
+              name="Free"
               price="Free"
               features={[
-                "5 AI thumbnails per month",
-                "Basic analytics dashboard",
-                "Keyword research tool",
-                "Community support"
+                "Outlier Analysis",
+                "Basic Support",
+                "Limited monthly usage",
+                "Community access"
               ]}
               buttonText="Get Started"
             />
@@ -39,26 +39,25 @@ export const PricingSection = () => {
               name="Pro"
               price="$29"
               features={[
-                "Unlimited AI thumbnails",
-                "Advanced analytics & insights",
-                "Content optimization AI",
-                "Outlier detection",
-                "Priority support",
-                "Export capabilities"
+                "Everything in Free",
+                "Thumbnail Search",
+                "Advanced Analytics",
+                "Priority Support",
+                "Increased usage limits"
               ]}
               popular={true}
               buttonText="Start Pro Trial"
             />
             <PricingCard
-              name="Agency"
+              name="Business"
               price="$99"
               features={[
                 "Everything in Pro",
-                "Multi-channel management",
-                "Team collaboration tools",
-                "White-label reports",
-                "Dedicated account manager",
-                "Custom integrations"
+                "AI Content Generator",
+                "Keywords Research",
+                "Unlimited Usage",
+                "Premium Support",
+                "Advanced features"
               ]}
               buttonText="Contact Sales"
             />

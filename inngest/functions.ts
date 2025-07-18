@@ -43,7 +43,7 @@ const prompt = `TASK: Generate a detailed, high-quality prompt for creating a Yo
 
   Please provide a detailed prompt that a graphic designer or AI image generator could use to create an effective YouTube thumbnail.`;
 
-  const aiContentPrompt = `You are an expert YouTube SEO strategist and AI creative assistant. Based on the user input below, generate a JSON response only (no explanation, no markdown, no commentary), containing:
+const aiContentPrompt = `You are an expert YouTube SEO strategist and AI creative assistant. Based on the user input below, generate a JSON response only (no explanation, no markdown, no commentary), containing:
 
 1. Three YouTube video titles optimized for SEO
 2. SEO Score for each title (1 to 100)
@@ -468,3 +468,21 @@ export const GenerateAiContent = inngest.createFunction(
     };
   }
 );
+
+export const getTrendingKeywords = inngest.createFunction(
+  {id: "ai/get-trending-keywords"},
+  { event: "ai/get-trending-keywords" },
+  async ({ event, step }) => {
+    // get google search trends using brightdata
+
+    const googleSearch = await step.run('google-search-trends', async () => {
+      
+    })
+
+    // get youtube search trends using youtube api
+
+    // ai model for keyword suggestions
+
+    // save to database
+  }
+)

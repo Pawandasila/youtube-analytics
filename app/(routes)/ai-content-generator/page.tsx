@@ -22,10 +22,13 @@ import {
   Users,
   Target,
   History,
+  Lock,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import { RunStatus } from "@/services/GlobalApi";
+import { useAuth } from "@clerk/nextjs";
 
 interface TitleOption {
   title: string;
@@ -63,6 +66,9 @@ interface SavedContent {
 type GenerationStep = "input" | "titles" | "content" | "history";
 
 export default function AIContentGeneratorPage() {
+  const { has } = useAuth();
+  
+  // All hooks must be called before any conditional logic
   const [inputTitle, setInputTitle] = useState("");
   const [generatedContent, setGeneratedContent] =
     useState<GeneratedContent | null>(null);
@@ -73,8 +79,86 @@ export default function AIContentGeneratorPage() {
   );
   const [savedContent, setSavedContent] = useState<SavedContent[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  
+  // Check user's plan
+  const hasFreePlan = !has || (!has({ plan: 'pro_plan' }) && !has({ plan: 'business_plan' }));
+  const hasProPlan = has && has({ plan: 'pro_plan' });
+  const hasBusinessPlan = has && has({ plan: 'business_plan' });
 
-  // Fetch saved content on component mount
+  if (!hasBusinessPlan) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="border-b">
+          <div className="container flex h-14 max-w-screen-2xl items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold">AI Content Generator</h1>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex-1 flex items-center justify-center p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-6 max-w-md"
+          >
+            <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto">
+              <Lock className="w-10 h-10 text-white" />
+            </div>
+            
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                Business Plan Required
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Only subscribers to the Business plan can access the AI Content Generator.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-left">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Available Features:</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {hasFreePlan ? "Free Plan: Outlier Generator" : ""}
+                      {hasProPlan ? "Pro Plan: Outlier + Thumbnail Search" : ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-red-500">✗</span>
+                    <span className="text-gray-600 dark:text-gray-400">Business Plan: All Features (AI Content Generator)</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Crown className="w-4 h-4 text-yellow-500" />
+                <span>Upgrade to Business plan to unlock this feature</span>
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => window.location.href = '/billing'}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Crown className="w-5 h-5" />
+                Upgrade to Business Plan
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  
   useEffect(() => {
     fetchSavedContent();
   }, []);
@@ -129,11 +213,11 @@ export default function AIContentGeneratorPage() {
         title: inputTitle,
       });
 
-      // The backend returns the runId from Inngest
+      
       const aiContent = response.data;
       console.log("Initial response:", aiContent);
 
-      // Wait a bit for the function to start
+      
       await new Promise((resolve) => setTimeout(resolve, 2000));
       
       let attempts = 0;
@@ -147,11 +231,9 @@ export default function AIContentGeneratorPage() {
 
           if (runStatus) {
             if (runStatus.status === 'Completed') {
-              // Extract the data from the database result
               const dbResult = runStatus.output?.data?.database?.result?.[0];
               
               if (dbResult) {
-                // Parse the JSON strings from the database
                 const titles = JSON.parse(dbResult.title);
                 const tags = JSON.parse(dbResult.tags);
                 const thumbnails = JSON.parse(dbResult.thumbnails);
@@ -217,7 +299,6 @@ export default function AIContentGeneratorPage() {
     const selectedTitle = generatedContent.titles[titleIndex].title;
 
     try {
-      // Since we already have all the content generated, we just need to set the selected title
       setGeneratedContent({
         ...generatedContent,
         selectedTitle,
@@ -238,7 +319,6 @@ export default function AIContentGeneratorPage() {
     setCurrentStep("input");
     setSelectedTitleIndex(null);
     setIsGenerating(false);
-    // Refresh saved content when starting over
     fetchSavedContent();
   };
 

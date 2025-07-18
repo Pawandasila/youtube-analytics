@@ -14,6 +14,7 @@ export { TestimonialCard } from './TestimonialCard';
 export { Navigation } from './Navigation';
 export { HeroSection } from './HeroSection';
 export { FeaturesSection } from './FeaturesSection';
+export { FeatureShowcase } from './FeatureShowcase';
 export { AnalyticsSection } from './AnalyticsSection';
 export { PricingSection } from './PricingSection';
 export { TestimonialsSection } from './TestimonialsSection';

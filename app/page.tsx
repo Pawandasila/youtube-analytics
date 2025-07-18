@@ -2,19 +2,41 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Search, Target, BarChart3, Users, Settings } from "lucide-react";
+import dynamic from "next/dynamic";
 import {
   Navigation,
   HeroSection,
-  FeaturesSection,
-  AnalyticsSection,
-  PricingSection,
-  TestimonialsSection,
-  Footer,
   FloatingElements
 } from "@/components/landing";
 
+// Dynamically import components that might cause hydration issues
+const FeaturesSection = dynamic(() => import("@/components/landing").then(mod => ({ default: mod.FeaturesSection })), {
+  ssr: false
+});
+
+const FeatureShowcase = dynamic(() => import("@/components/landing").then(mod => ({ default: mod.FeatureShowcase })), {
+  ssr: false
+});
+
+const AnalyticsSection = dynamic(() => import("@/components/landing").then(mod => ({ default: mod.AnalyticsSection })), {
+  ssr: false
+});
+
+const PricingSection = dynamic(() => import("@/components/landing").then(mod => ({ default: mod.PricingSection })), {
+  ssr: false
+});
+
+const TestimonialsSection = dynamic(() => import("@/components/landing").then(mod => ({ default: mod.TestimonialsSection })), {
+  ssr: false
+});
+
+const Footer = dynamic(() => import("@/components/landing").then(mod => ({ default: mod.Footer })), {
+  ssr: false
+});
+
 export default function Home() {
   const [showFloatingMenu, setShowFloatingMenu] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { user } = useUser();
 
   const menuItems = [
@@ -25,20 +47,26 @@ export default function Home() {
     { label: "Settings", icon: <Settings size={20} />, href: "/settings" }
   ];
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Track scroll position to show/hide floating menu
   useEffect(() => {
+    if (!isMounted) return;
+
     const handleScroll = () => {
       const heroSection = document.querySelector('#hero-section') as HTMLElement;
       if (heroSection) {
         const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-        const scrollPosition = window.scrollY + 100; // Add some offset
+        const scrollPosition = window.scrollY + 100;
         setShowFloatingMenu(scrollPosition > heroBottom);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMounted]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
@@ -56,20 +84,28 @@ export default function Home() {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* AI Features Section */}
-      <FeaturesSection />
+      {/* Dynamically loaded sections to prevent hydration issues */}
+      {isMounted && (
+        <>
+          {/* AI Features Section */}
+          <FeaturesSection />
 
-      {/* Live Analytics Section */}
-      <AnalyticsSection />
+          {/* Feature Showcase */}
+          <FeatureShowcase />
 
-      {/* Pricing Section */}
-      <PricingSection />
+          {/* Live Analytics Section */}
+          <AnalyticsSection />
 
-      {/* Testimonials Section */}
-      <TestimonialsSection />
+          {/* Pricing Section */}
+          <PricingSection />
 
-      {/* Footer */}
-      <Footer />
+          {/* Testimonials Section */}
+          <TestimonialsSection />
+
+          {/* Footer */}
+          <Footer />
+        </>
+      )}
     </div>
   );
 }

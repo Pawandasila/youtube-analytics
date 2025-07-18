@@ -84,7 +84,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
             key={suggestion.id}
             thumbnail={suggestion}
             index={index}
-            onClick={() => onGenerateMore()}
           />
         ))}
       </div>

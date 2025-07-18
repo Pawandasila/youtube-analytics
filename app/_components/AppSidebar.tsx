@@ -53,16 +53,16 @@ const aiToolsItems = [
     url: "/thumbnail-search",
     icon: Monitor,
   },
-  {
-    title: "Keywords",
-    url: "/keywords",
-    icon: Hash,
-  },
-  {
-    title: "Optimize",
-    url: "/optimize",
-    icon: BarChart3,
-  },
+  // {
+  //   title: "Keywords",
+  //   url: "/keywords",
+  //   icon: Hash,
+  // },
+  // {
+  //   title: "Optimize",
+  //   url: "/optimize",
+  //   icon: BarChart3,
+  // },
   {
     title: "Outlier",
     url: "/outlier",

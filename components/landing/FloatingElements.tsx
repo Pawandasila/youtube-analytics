@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, ArrowRight } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
@@ -13,6 +14,15 @@ interface FloatingElementsProps {
 }
 
 export const FloatingElements = ({ showFloatingMenu, user, menuItems }: FloatingElementsProps) => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
   return (
     <>
       {/* Floating Hamburger Menu - appears after hero section */}

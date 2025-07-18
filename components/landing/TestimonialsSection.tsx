@@ -12,12 +12,12 @@ export const TestimonialsSection = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               Loved by{" "}
               <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-                50,000+
+                15,000+
               </span>{" "}
               Creators
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              See what YouTube creators are saying about TrendTide
+              See what YouTube creators are saying about our AI-powered platform
             </p>
           </div>
         </ParallaxSection>
@@ -27,19 +27,19 @@ export const TestimonialsSection = () => {
             <TestimonialCard
               name="Alex Chen"
               role="Tech YouTuber • 500K subscribers"
-              content="TrendTide's AI thumbnail generator increased my CTR by 340%. The analytics insights are incredibly actionable!"
+              content="The AI thumbnail generator is incredible! My CTR increased by 285% and I save hours of design work every week."
               avatar="/logo.svg"
             />
             <TestimonialCard
               name="Sarah Martinez"
               role="Lifestyle Creator • 250K subscribers"
-              content="The keyword research tool helped me discover trending topics I never would have found. My views doubled in 3 months!"
+              content="The thumbnail search feature helped me understand what works in my niche. I found patterns I never noticed before!"
               avatar="/logo.svg"
             />
             <TestimonialCard
               name="Mike Johnson"
               role="Gaming Channel • 1M subscribers"
-              content="Best investment I've made for my channel. The outlier detection feature helped me understand why some videos went viral."
+              content="The outlier analysis is a game-changer. I can now identify which videos will perform well before they even go viral."
               avatar="/logo.svg"
             />
           </div>

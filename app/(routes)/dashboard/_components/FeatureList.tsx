@@ -40,22 +40,22 @@ const FeatureList = () => {
             icon: Target,
             color: "from-orange-500 to-orange-600"
         },
-        { 
-            title: "Keywords Research", 
-            image: '/feature5.png',
-            path: '/keywords', 
-            description: "Find the best keywords to rank higher and reach your target audience effectively.",
-            icon: Zap,
-            color: "from-pink-500 to-pink-600"
-        },
-        { 
-            title: "Video Optimization", 
-            image: '/feature6.png',
-            path: '/optimize', 
-            description: "Optimize your videos for maximum engagement and algorithmic performance.",
-            icon: TrendingUp,
-            color: "from-indigo-500 to-indigo-600"
-        },
+        // { 
+        //     title: "Keywords Research", 
+        //     image: '/feature5.png',
+        //     path: '/keywords', 
+        //     description: "Find the best keywords to rank higher and reach your target audience effectively.",
+        //     icon: Zap,
+        //     color: "from-pink-500 to-pink-600"
+        // },
+        // { 
+        //     title: "Video Optimization", 
+        //     image: '/feature6.png',
+        //     path: '/optimize', 
+        //     description: "Optimize your videos for maximum engagement and algorithmic performance.",
+        //     icon: TrendingUp,
+        //     color: "from-indigo-500 to-indigo-600"
+        // },
     ];
 
     const containerVariants = {
@@ -94,7 +94,7 @@ const FeatureList = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             >
                 {features.map((feature, index) => {
                     const IconComponent = feature.icon;
@@ -115,7 +115,7 @@ const FeatureList = () => {
                                             alt={feature.title}
                                             fill
                                             priority
-                                            className="object-cover object-top aspect-video"
+                                            className="object-contain object-top aspect-video"
                                         />
                                         
                                         {/* Content overlay */}

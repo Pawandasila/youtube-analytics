@@ -2,11 +2,27 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Sparkles } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { TrendingUp, Sparkles, Crown, Zap, Star } from 'lucide-react';
+import { useUser, useAuth } from '@clerk/nextjs';
 
 const WelcomeBanner = () => {
     const {user} = useUser();
+    const { has } = useAuth();
+
+    // Check user's plan using the correct plan names
+    const hasFreePlan = !has || (!has({ plan: 'pro_plan' }) && !has({ plan: 'business_plan' }));
+    const hasProPlan = has && has({ plan: 'pro_plan' });
+    const hasBusinessPlan = has && has({ plan: 'business_plan' });
+
+    // Determine user's current plan
+    const getCurrentPlan = () => {
+        if (hasBusinessPlan) return { name: 'Business', icon: Crown, color: 'yellow' };
+        if (hasProPlan) return { name: 'Pro', icon: Zap, color: 'blue' };
+        return { name: 'Free', icon: Star, color: 'gray' };
+    };
+
+    const currentPlan = getCurrentPlan();
+    const PlanIcon = currentPlan.icon;
 
   return (
     <motion.div 
@@ -42,9 +58,16 @@ const WelcomeBanner = () => {
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                   Welcome back, <span className='font-extrabold capitalize text-rose-500'>{user?.firstName ? ` ${user.firstName}!` : ''}</span>
                 </h1>
-                <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-full">
-                  PRO
-                </span>
+                <div className={`flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full ${
+                  currentPlan.color === 'yellow' 
+                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' 
+                    : currentPlan.color === 'blue'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                    : 'bg-gray-100 text-gray-700 dark:bg-gray-900/50 dark:text-gray-300'
+                }`}>
+                  <PlanIcon className="w-3 h-3" />
+                  {currentPlan.name}
+                </div>
               </div>
             </motion.div>
 

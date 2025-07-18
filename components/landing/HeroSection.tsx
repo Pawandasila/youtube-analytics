@@ -33,18 +33,18 @@ export const HeroSection = () => {
           
           <ParallaxSection offset={50}>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-              Track, Analyze & Grow Your{" "}
+              AI-Powered YouTube{" "}
               <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-                YouTube Channel
+                Content Creation
               </span>{" "}
-              with AI
+              & Analytics
             </h1>
           </ParallaxSection>
           
           <ParallaxSection offset={70}>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Revolutionize your content creation with our AI-powered platform. Generate thumbnails, optimize titles, 
-              discover trending keywords, and track performance - all in one intelligent dashboard.
+              Create stunning thumbnails, generate engaging content, analyze competitors, and discover breakthrough opportunities 
+              - all powered by advanced AI technology in one intelligent platform.
             </p>
           </ParallaxSection>
           
@@ -79,19 +79,19 @@ export const HeroSection = () => {
           <ParallaxSection offset={110}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
               <div className="text-center">
-                <AnimatedCounter end={50000} suffix="+" />
+                <AnimatedCounter end={15000} suffix="+" />
                 <p className="text-gray-600 dark:text-gray-400 mt-2">Creators</p>
               </div>
               <div className="text-center">
-                <AnimatedCounter end={2500000} suffix="+" />
-                <p className="text-gray-600 dark:text-gray-400 mt-2">Videos Analyzed</p>
+                <AnimatedCounter end={500000} suffix="+" />
+                <p className="text-gray-600 dark:text-gray-400 mt-2">Thumbnails Created</p>
               </div>
               <div className="text-center">
-                <AnimatedCounter end={342} suffix="%" />
+                <AnimatedCounter end={248} suffix="%" />
                 <p className="text-gray-600 dark:text-gray-400 mt-2">Avg. Growth</p>
               </div>
               <div className="text-center">
-                <AnimatedCounter end={99} suffix="%" />
+                <AnimatedCounter end={98} suffix="%" />
                 <p className="text-gray-600 dark:text-gray-400 mt-2">Satisfaction</p>
               </div>
             </div>
