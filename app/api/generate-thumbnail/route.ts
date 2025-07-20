@@ -37,10 +37,20 @@ export async function POST(req: NextRequest) {
       userEmail: user.primaryEmailAddress.emailAddress,
     };
 
+    // Add debugging for environment variables
+    console.log("🔍 Environment check:", {
+      hasEventKey: !!process.env.INNGEST_EVENT_KEY,
+      hasSigningKey: !!process.env.NEXT_PUBLIC_INNGEST_SIGNING_KEY,
+      nodeEnv: process.env.NODE_ENV,
+      eventKeyPrefix: process.env.INNGEST_EVENT_KEY?.substring(0, 10) + "...",
+    });
+
     const result = await inngest.send({
       name: "ai/generate-thumbnail",
       data: inputData,
     });
+
+    console.log("✅ Inngest event sent successfully:", result);
 
     return NextResponse.json({
       message: "Thumbnail generation started successfully",
