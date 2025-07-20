@@ -23,6 +23,13 @@ import { containerVariants, itemVariants } from "./types";
 import { toast } from "sonner";
 import ThumbnailList from "./_components/ThumbnailList";
 
+/**
+ * Renders the main page for the AI-powered thumbnail generator, providing a UI for uploading content, generating thumbnails, and showcasing features and usage steps.
+ *
+ * Includes animated hero section, feature highlights, a step-by-step getting started guide, and a modal for thumbnail generation. Handles asynchronous thumbnail creation with status polling, error handling, and loading state feedback.
+ *
+ * @returns The complete thumbnail generator page component.
+ */
 export default function ThumbnailGeneratorPage() {
   const { has } = useAuth();
   

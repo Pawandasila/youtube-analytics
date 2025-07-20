@@ -5,6 +5,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
 import { NextResponse, NextRequest } from "next/server";
 
+/**
+ * Handles POST requests to initiate AI-powered thumbnail generation.
+ *
+ * Extracts content and optional image files from the form data, validates user authentication and input, processes images, and sends a thumbnail generation event to an external service. Returns a JSON response indicating success with event run IDs, or an error response if validation or processing fails.
+ */
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
